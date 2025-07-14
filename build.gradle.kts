@@ -23,6 +23,7 @@ dependencies {
     // Test
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
     testImplementation("io.mockk:mockk:1.13.8")
+    testImplementation("ch.qos.logback:logback-classic:1.4.11")
 }
 
 tasks.test {
