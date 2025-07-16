@@ -29,3 +29,6 @@ build/
 
 # Application
 jobis.db
+
+# Claude
+.claude

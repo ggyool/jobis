@@ -4,6 +4,7 @@ import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.io.File
 
 object DatabaseConfig {
     
@@ -23,7 +24,25 @@ object DatabaseConfig {
     }
     
     private fun connectLocal() {
-        Database.connect("jdbc:sqlite:jobis.db", driver = "org.sqlite.JDBC")
+        val homeDir = System.getProperty("user.home")
+        val jobisDir = File(homeDir, "jobis")
+
+        if (!jobisDir.exists()) {
+            jobisDir.mkdirs()
+            jobisDir.setReadable(true, false)
+            jobisDir.setWritable(true, false)
+            jobisDir.setExecutable(true, false)
+        }
+        
+        val dbFile = File(jobisDir, "jobis.db")
+        val dbPath = dbFile.absolutePath
+        
+        Database.connect("jdbc:sqlite:$dbPath", driver = "org.sqlite.JDBC")
+
+        if (dbFile.exists()) {
+            dbFile.setReadable(true, false)
+            dbFile.setWritable(true, false)
+        }
     }
     
     private fun connectInMemory() {
