@@ -28,37 +28,17 @@ class ActivityTools(private val repository: ActivityRepository) {
             description = "새로운 활동을 생성합니다",
             inputSchema = Tool.Input(
                 properties = buildJsonObject {
-                    putJsonObject("startedAt") {
-                        put("type", "string")
-                        put("description", "시작 시간 (YYYY-MM-DD HH:mm:ss, 한국 서울 시간 기준으로 입력)")
-                    }
-                    putJsonObject("endedAt") {
-                        put("type", "string")
-                        put("description", "종료 시간 (YYYY-MM-DD HH:mm:ss, 한국 서울 시간 기준으로 입력, 선택사항)")
-                    }
                     putJsonObject("description") {
                         put("type", "string")
                         put("description", "활동 설명 (선택사항)")
                     }
                 },
-                required = listOf("startedAt")
+                required = emptyList()
             )
         ) { request ->
-            val startedAt = request.arguments["startedAt"]?.jsonPrimitive?.content
-            if (startedAt == null) {
-                return@addTool CallToolResult(
-                    content = listOf(TextContent("The 'startedAt' parameter is required."))
-                )
-            }
-            
-            val endedAt = request.arguments["endedAt"]?.jsonPrimitive?.contentOrNull
             val description = request.arguments["description"]?.jsonPrimitive?.contentOrNull
             
-            val activity = repository.createActivity(
-                LocalDateTime.parse(startedAt, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-                endedAt?.let { LocalDateTime.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) },
-                description
-            )
+            val activity = repository.createActivity(description)
             
             val result = buildJsonObject {
                 put("success", true)

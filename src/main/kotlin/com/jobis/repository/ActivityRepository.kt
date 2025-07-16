@@ -6,7 +6,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 interface ActivityRepository {
-    fun createActivity(startedAt: LocalDateTime, endedAt: LocalDateTime?, description: String?): ActivityEntity
+
+    fun createActivity(description: String?): ActivityEntity
     
     fun findAll(): List<ActivityEntity>
 

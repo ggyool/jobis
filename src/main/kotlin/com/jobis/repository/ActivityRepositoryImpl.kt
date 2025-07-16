@@ -12,11 +12,11 @@ import java.time.LocalDateTime
 
 class ActivityRepositoryImpl : ActivityRepository {
     
-    override fun createActivity(startedAt: LocalDateTime, endedAt: LocalDateTime?, description: String?): ActivityEntity = transaction {
+    override fun createActivity(description: String?): ActivityEntity = transaction {
         val now = LocalDateTime.now()
         ActivityEntity.new {
-            this.startedAt = startedAt
-            this.endedAt = endedAt
+            this.startedAt = now
+            this.endedAt = null
             this.description = description
             this.createdAt = now
             this.updatedAt = now
