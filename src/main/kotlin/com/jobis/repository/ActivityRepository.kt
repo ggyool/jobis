@@ -6,15 +6,19 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 interface ActivityRepository {
-    fun createActivity(startedAt: LocalDateTime, description: String?): ActivityEntity
+    fun createActivity(startedAt: LocalDateTime, endedAt: LocalDateTime?, description: String?): ActivityEntity
     
     fun findAll(): List<ActivityEntity>
+
+    fun findById(id: Long): ActivityEntity?
     
     fun findByDateRange(startDate: LocalDate, endDate: LocalDate): List<ActivityEntity>
+
+    fun updateStartedAt(id: Long, startedAt: LocalDateTime): Boolean
     
-    fun updateActivities(activities: List<ActivityEntity>): List<ActivityEntity>
+    fun updateEndedAt(id: Long, endedAt: LocalDateTime?): Boolean
     
-    fun updateActivity(activity: ActivityEntity): ActivityEntity
+    fun updateDescription(id: Long, description: String?): Boolean
     
     fun deleteActivities(ids: List<Long>): Int
     

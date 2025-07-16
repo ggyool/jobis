@@ -30,7 +30,11 @@ class ActivityTools(private val repository: ActivityRepository) {
                 properties = buildJsonObject {
                     putJsonObject("startedAt") {
                         put("type", "string")
-                        put("description", "시작 시간 (YYYY-MM-DD HH:mm:ss)")
+                        put("description", "시작 시간 (YYYY-MM-DD HH:mm:ss, 한국 서울 시간 기준으로 입력)")
+                    }
+                    putJsonObject("endedAt") {
+                        put("type", "string")
+                        put("description", "종료 시간 (YYYY-MM-DD HH:mm:ss, 한국 서울 시간 기준으로 입력, 선택사항)")
                     }
                     putJsonObject("description") {
                         put("type", "string")
@@ -47,10 +51,12 @@ class ActivityTools(private val repository: ActivityRepository) {
                 )
             }
             
+            val endedAt = request.arguments["endedAt"]?.jsonPrimitive?.contentOrNull
             val description = request.arguments["description"]?.jsonPrimitive?.contentOrNull
             
             val activity = repository.createActivity(
                 LocalDateTime.parse(startedAt, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                endedAt?.let { LocalDateTime.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) },
                 description
             )
             
@@ -110,11 +116,11 @@ class ActivityTools(private val repository: ActivityRepository) {
                 properties = buildJsonObject {
                     putJsonObject("startDate") {
                         put("type", "string")
-                        put("description", "시작 날짜 (YYYY-MM-DD)")
+                        put("description", "시작 날짜 (YYYY-MM-DD, 한국 서울 시간 기준)")
                     }
                     putJsonObject("endDate") {
                         put("type", "string")
-                        put("description", "종료 날짜 (YYYY-MM-DD)")
+                        put("description", "종료 날짜 (YYYY-MM-DD, 한국 서울 시간 기준)")
                     }
                 },
                 required = listOf("startDate", "endDate")
@@ -171,11 +177,11 @@ class ActivityTools(private val repository: ActivityRepository) {
                     }
                     putJsonObject("startedAt") {
                         put("type", "string")
-                        put("description", "시작 시간 (YYYY-MM-DD HH:mm:ss)")
+                        put("description", "시작 시간 (YYYY-MM-DD HH:mm:ss, 한국 서울 시간 기준으로 입력)")
                     }
                     putJsonObject("endedAt") {
                         put("type", "string")
-                        put("description", "종료 시간 (YYYY-MM-DD HH:mm:ss, 선택사항)")
+                        put("description", "종료 시간 (YYYY-MM-DD HH:mm:ss, 한국 서울 시간 기준으로 입력, 선택사항)")
                     }
                     putJsonObject("description") {
                         put("type", "string")
@@ -192,30 +198,33 @@ class ActivityTools(private val repository: ActivityRepository) {
                 )
             }
             
-            val activities = repository.findAll()
-            val activity = activities.find { it.id.value == id }
+            val activity = repository.findById(id)
             if (activity == null) {
                 return@addTool CallToolResult(
                     content = listOf(TextContent("Activity not found with id: $id"))
                 )
             }
             
+            var updated = false
+            
             request.arguments["startedAt"]?.jsonPrimitive?.contentOrNull?.let { startedAtStr ->
-                activity.startedAt = LocalDateTime.parse(startedAtStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                val startedAt = LocalDateTime.parse(startedAtStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                if (repository.updateStartedAt(id, startedAt)) updated = true
             }
             
             request.arguments["endedAt"]?.jsonPrimitive?.contentOrNull?.let { endedAtStr ->
-                activity.endedAt = LocalDateTime.parse(endedAtStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                val endedAt = LocalDateTime.parse(endedAtStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                if (repository.updateEndedAt(id, endedAt)) updated = true
             }
             
             request.arguments["description"]?.jsonPrimitive?.contentOrNull?.let { desc ->
-                activity.description = desc
+                if (repository.updateDescription(id, desc)) updated = true
             }
             
-            val updatedActivity = repository.updateActivity(activity)
+            val updatedActivity = repository.findById(id)!!
             
             val result = buildJsonObject {
-                put("success", true)
+                put("success", updated)
                 putJsonObject("activity") {
                     put("id", updatedActivity.id.value)
                     put("startedAt", updatedActivity.startedAt.toString())
@@ -270,7 +279,7 @@ class ActivityTools(private val repository: ActivityRepository) {
                 properties = buildJsonObject {
                     putJsonObject("date") {
                         put("type", "string")
-                        put("description", "날짜 (YYYY-MM-DD)")
+                        put("description", "날짜 (YYYY-MM-DD, 한국 서울 시간 기준)")
                     }
                 },
                 required = listOf("date")
@@ -309,11 +318,11 @@ class ActivityTools(private val repository: ActivityRepository) {
                 properties = buildJsonObject {
                     putJsonObject("startDate") {
                         put("type", "string")
-                        put("description", "시작 날짜 (YYYY-MM-DD)")
+                        put("description", "시작 날짜 (YYYY-MM-DD, 한국 서울 시간 기준)")
                     }
                     putJsonObject("endDate") {
                         put("type", "string")
-                        put("description", "종료 날짜 (YYYY-MM-DD)")
+                        put("description", "종료 날짜 (YYYY-MM-DD, 한국 서울 시간 기준)")
                     }
                 },
                 required = listOf("startDate", "endDate")

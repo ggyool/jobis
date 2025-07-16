@@ -12,10 +12,11 @@ import java.time.LocalDateTime
 
 class ActivityRepositoryImpl : ActivityRepository {
     
-    override fun createActivity(startedAt: LocalDateTime, description: String?): ActivityEntity = transaction {
+    override fun createActivity(startedAt: LocalDateTime, endedAt: LocalDateTime?, description: String?): ActivityEntity = transaction {
         val now = LocalDateTime.now()
         ActivityEntity.new {
             this.startedAt = startedAt
+            this.endedAt = endedAt
             this.description = description
             this.createdAt = now
             this.updatedAt = now
@@ -28,6 +29,10 @@ class ActivityRepositoryImpl : ActivityRepository {
             .toList()
     }
     
+    override fun findById(id: Long): ActivityEntity? = transaction {
+        ActivityEntity.findById(id)?.takeIf { it.deletedAt == null }
+    }
+    
     override fun findByDateRange(startDate: LocalDate, endDate: LocalDate): List<ActivityEntity> = transaction {
         ActivityEntity.find {
             (Activity.startedAt.date() greaterEq startDate) and 
@@ -37,17 +42,28 @@ class ActivityRepositoryImpl : ActivityRepository {
         .toList()
     }
     
-    override fun updateActivities(activities: List<ActivityEntity>): List<ActivityEntity> = transaction {
-        val now = LocalDateTime.now()
-        activities.forEach { activity ->
-            activity.updatedAt = now
-        }
-        activities
+    override fun updateStartedAt(id: Long, startedAt: LocalDateTime): Boolean = transaction {
+        ActivityEntity.findById(id)?.takeIf { it.deletedAt == null }?.let { activity ->
+            activity.startedAt = startedAt
+            activity.updatedAt = LocalDateTime.now()
+            true
+        } ?: false
     }
     
-    override fun updateActivity(activity: ActivityEntity): ActivityEntity = transaction {
-        activity.updatedAt = LocalDateTime.now()
-        activity
+    override fun updateEndedAt(id: Long, endedAt: LocalDateTime?): Boolean = transaction {
+        ActivityEntity.findById(id)?.takeIf { it.deletedAt == null }?.let { activity ->
+            activity.endedAt = endedAt
+            activity.updatedAt = LocalDateTime.now()
+            true
+        } ?: false
+    }
+    
+    override fun updateDescription(id: Long, description: String?): Boolean = transaction {
+        ActivityEntity.findById(id)?.takeIf { it.deletedAt == null }?.let { activity ->
+            activity.description = description
+            activity.updatedAt = LocalDateTime.now()
+            true
+        } ?: false
     }
     
     override fun deleteActivities(ids: List<Long>): Int = transaction {
