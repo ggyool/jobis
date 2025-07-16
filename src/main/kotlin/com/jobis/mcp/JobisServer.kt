@@ -1,6 +1,7 @@
 package com.jobis.mcp
 
 import com.jobis.repository.ActivityRepositoryImpl
+import com.jobis.repository.JobApplyRepositoryImpl
 import io.ktor.utils.io.streams.*
 import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.ServerCapabilities
@@ -11,18 +12,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.asSink
 import kotlinx.io.buffered
-import org.slf4j.LoggerFactory
 
 class JobisServer {
-    private val logger = LoggerFactory.getLogger(JobisServer::class.java)
-    
+
     fun start() {
-        
         val server = createServer()
         registerTools(server)
         startServer(server)
     }
-    
+
     private fun createServer(): Server {
         return Server(
             Implementation(
@@ -36,25 +34,29 @@ class JobisServer {
             )
         )
     }
-    
+
     private fun registerTools(server: Server) {
-        val repository = ActivityRepositoryImpl()
-        val activityTools = ActivityTools(repository)
+        val activityRepository = ActivityRepositoryImpl()
+        val activityTools = ActivityTools(activityRepository)
         activityTools.registerTools(server)
-    }
-    
-    private fun startServer(server: Server) {
         
+        val jobApplyRepository = JobApplyRepositoryImpl()
+        val jobApplyTools = JobApplyTools(jobApplyRepository)
+        jobApplyTools.registerTools(server)
+    }
+
+    private fun startServer(server: Server) {
+
         val transport = StdioServerTransport(
             System.`in`.asInput(),
             System.out.asSink().buffered()
         )
-        
+
         runBlocking {
             server.connect(transport)
             val done = Job()
-            server.onClose { 
-                done.complete() 
+            server.onClose {
+                done.complete()
             }
             done.join()
         }
