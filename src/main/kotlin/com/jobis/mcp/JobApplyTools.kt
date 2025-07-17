@@ -2,17 +2,23 @@ package com.jobis.mcp
 
 import com.jobis.domain.JobApplyStatus
 import com.jobis.repository.JobApplyRepository
-import io.modelcontextprotocol.kotlin.sdk.server.Server
-import io.modelcontextprotocol.kotlin.sdk.Tool
 import io.modelcontextprotocol.kotlin.sdk.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.TextContent
-import kotlinx.serialization.json.*
-import java.time.LocalDate
+import io.modelcontextprotocol.kotlin.sdk.Tool
+import io.modelcontextprotocol.kotlin.sdk.server.Server
+import kotlinx.serialization.json.addJsonObject
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonArray
+import kotlinx.serialization.json.putJsonObject
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class JobApplyTools(private val repository: JobApplyRepository) {
-    
+
     fun registerTools(server: Server) {
         registerCreateJobApply(server)
         registerFindAllJobApplies(server)
@@ -23,7 +29,7 @@ class JobApplyTools(private val repository: JobApplyRepository) {
         registerFindJobAppliesByCompany(server)
         registerUpdateJobApplyDetails(server)
     }
-    
+
     private fun registerCreateJobApply(server: Server) {
         server.addTool(
             name = "create_job_apply",
@@ -64,17 +70,18 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                     content = listOf(TextContent("The 'companyName' parameter is required."))
                 )
             }
-            
+
             val position = request.arguments["position"]?.jsonPrimitive?.contentOrNull
             val jobPostingUrl = request.arguments["jobPostingUrl"]?.jsonPrimitive?.contentOrNull
-            val appliedAt = request.arguments["appliedAt"]?.jsonPrimitive?.contentOrNull?.let { 
+            val appliedAt = request.arguments["appliedAt"]?.jsonPrimitive?.contentOrNull?.let {
                 LocalDateTime.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
             }
-            val nextEventDate = request.arguments["nextEventDate"]?.jsonPrimitive?.contentOrNull?.let { 
-                LocalDateTime.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-            }
+            val nextEventDate =
+                request.arguments["nextEventDate"]?.jsonPrimitive?.contentOrNull?.let {
+                    LocalDateTime.parse(it, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                }
             val notes = request.arguments["notes"]?.jsonPrimitive?.contentOrNull
-            
+
             val jobApply = repository.createJobApply(
                 companyName = companyName,
                 position = position,
@@ -83,7 +90,7 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                 nextEventDate = nextEventDate,
                 notes = notes
             )
-            
+
             val result = buildJsonObject {
                 put("success", true)
                 putJsonObject("jobApply") {
@@ -92,29 +99,29 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                     put("position", jobApply.position)
                     put("jobPostingUrl", jobApply.jobPostingUrl)
                     put("appliedAt", jobApply.appliedAt?.toString())
-                    put("status", jobApply.status.name)
+                    put("status", jobApply.status.description)
                     put("nextEventDate", jobApply.nextEventDate?.toString())
                     put("notes", jobApply.notes)
                     put("createdAt", jobApply.createdAt.toString())
                     put("updatedAt", jobApply.updatedAt.toString())
                 }
             }
-            
+
             CallToolResult(content = listOf(TextContent(result.toString())))
         }
     }
-    
+
     private fun registerFindAllJobApplies(server: Server) {
         server.addTool(
             name = "find_all_job_applies",
-            description = "모든 지원 정보를 조회합니다 (삭제된 항목 제외, 최신순 정렬)",
+            description = "모든 지원 정보를 조회합니다 (최신순 정렬)",
             inputSchema = Tool.Input(
                 properties = buildJsonObject { },
                 required = emptyList()
             )
         ) { _ ->
             val jobApplies = repository.findAll()
-            
+
             val result = buildJsonObject {
                 put("success", true)
                 putJsonArray("jobApplies") {
@@ -125,7 +132,7 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                             put("position", jobApply.position)
                             put("jobPostingUrl", jobApply.jobPostingUrl)
                             put("appliedAt", jobApply.appliedAt?.toString())
-                            put("status", jobApply.status.name)
+                            put("status", jobApply.status.description)
                             put("nextEventDate", jobApply.nextEventDate?.toString())
                             put("notes", jobApply.notes)
                             put("createdAt", jobApply.createdAt.toString())
@@ -135,11 +142,11 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                 }
                 put("count", jobApplies.size)
             }
-            
+
             CallToolResult(content = listOf(TextContent(result.toString())))
         }
     }
-    
+
     private fun registerFindActiveJobApplies(server: Server) {
         server.addTool(
             name = "find_active_job_applies",
@@ -150,7 +157,7 @@ class JobApplyTools(private val repository: JobApplyRepository) {
             )
         ) { _ ->
             val jobApplies = repository.findActiveJobApplies()
-            
+
             val result = buildJsonObject {
                 put("success", true)
                 putJsonArray("jobApplies") {
@@ -161,7 +168,7 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                             put("position", jobApply.position)
                             put("jobPostingUrl", jobApply.jobPostingUrl)
                             put("appliedAt", jobApply.appliedAt?.toString())
-                            put("status", jobApply.status.name)
+                            put("status", jobApply.status.description)
                             put("nextEventDate", jobApply.nextEventDate?.toString())
                             put("notes", jobApply.notes)
                             put("createdAt", jobApply.createdAt.toString())
@@ -171,11 +178,11 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                 }
                 put("count", jobApplies.size)
             }
-            
+
             CallToolResult(content = listOf(TextContent(result.toString())))
         }
     }
-    
+
     private fun registerUpdateJobApplyStatus(server: Server) {
         server.addTool(
             name = "update_job_apply_status",
@@ -188,7 +195,10 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                     }
                     putJsonObject("status") {
                         put("type", "string")
-                        put("description", "새로운 상태 (APPLIED, EXAM_SCHEDULED, EXAM_RESULT_WAITING, INTERVIEW_SCHEDULED, INTERVIEW_RESULT_WAITING, PASSED, REJECTED)")
+                        put(
+                            "description",
+                            "새로운 상태 (APPLIED: 지원 완료, EXAM_SCHEDULED: 시험 예정, EXAM_RESULT_WAITING: 시험 결과 대기, INTERVIEW_SCHEDULED: 면접 예정, INTERVIEW_RESULT_WAITING: 면접 결과 대기, PASSED: 합격, REJECTED: 불합격)"
+                        )
                     }
                 },
                 required = listOf("id", "status")
@@ -196,28 +206,34 @@ class JobApplyTools(private val repository: JobApplyRepository) {
         ) { request ->
             val id = request.arguments["id"]?.jsonPrimitive?.longOrNull
             val statusStr = request.arguments["status"]?.jsonPrimitive?.content
-            
+
             if (id == null || statusStr == null) {
                 return@addTool CallToolResult(
                     content = listOf(TextContent("Both 'id' and 'status' parameters are required."))
                 )
             }
-            
+
             val status = try {
                 JobApplyStatus.valueOf(statusStr)
             } catch (e: IllegalArgumentException) {
                 return@addTool CallToolResult(
-                    content = listOf(TextContent("Invalid status: $statusStr. Valid values: ${JobApplyStatus.values().joinToString(", ")}"))
+                    content = listOf(
+                        TextContent(
+                            "Invalid status: $statusStr. Valid values: ${
+                                JobApplyStatus.values().joinToString(", ")
+                            }"
+                        )
+                    )
                 )
             }
-            
+
             val updated = repository.updateStatus(id, status)
             if (!updated) {
                 return@addTool CallToolResult(
                     content = listOf(TextContent("JobApply not found with id: $id"))
                 )
             }
-            
+
             val jobApply = repository.findById(id)!!
             val result = buildJsonObject {
                 put("success", true)
@@ -227,22 +243,22 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                     put("position", jobApply.position)
                     put("jobPostingUrl", jobApply.jobPostingUrl)
                     put("appliedAt", jobApply.appliedAt?.toString())
-                    put("status", jobApply.status.name)
+                    put("status", jobApply.status.description)
                     put("nextEventDate", jobApply.nextEventDate?.toString())
                     put("notes", jobApply.notes)
                     put("createdAt", jobApply.createdAt.toString())
                     put("updatedAt", jobApply.updatedAt.toString())
                 }
             }
-            
+
             CallToolResult(content = listOf(TextContent(result.toString())))
         }
     }
-    
+
     private fun registerDeleteJobApply(server: Server) {
         server.addTool(
             name = "delete_job_apply",
-            description = "지원 정보를 삭제합니다 (soft delete)",
+            description = "지원 정보를 삭제합니다",
             inputSchema = Tool.Input(
                 properties = buildJsonObject {
                     putJsonObject("id") {
@@ -259,18 +275,21 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                     content = listOf(TextContent("The 'id' parameter is required."))
                 )
             }
-            
+
             val deleted = repository.deleteJobApply(id)
-            
+
             val result = buildJsonObject {
                 put("success", deleted)
-                put("message", if (deleted) "JobApply deleted successfully" else "JobApply not found with id: $id")
+                put(
+                    "message",
+                    if (deleted) "JobApply deleted successfully" else "JobApply not found with id: $id"
+                )
             }
-            
+
             CallToolResult(content = listOf(TextContent(result.toString())))
         }
     }
-    
+
     private fun registerFindJobAppliesByStatus(server: Server) {
         server.addTool(
             name = "find_job_applies_by_status",
@@ -279,7 +298,10 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                 properties = buildJsonObject {
                     putJsonObject("status") {
                         put("type", "string")
-                        put("description", "조회할 상태 (APPLIED, EXAM_SCHEDULED, EXAM_RESULT_WAITING, INTERVIEW_SCHEDULED, INTERVIEW_RESULT_WAITING, PASSED, REJECTED)")
+                        put(
+                            "description",
+                            "조회할 상태 (APPLIED: 지원 완료, EXAM_SCHEDULED: 시험 예정, EXAM_RESULT_WAITING: 시험 결과 대기, INTERVIEW_SCHEDULED: 면접 예정, INTERVIEW_RESULT_WAITING: 면접 결과 대기, PASSED: 합격, REJECTED: 불합격)"
+                        )
                     }
                 },
                 required = listOf("status")
@@ -291,17 +313,23 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                     content = listOf(TextContent("The 'status' parameter is required."))
                 )
             }
-            
+
             val status = try {
                 JobApplyStatus.valueOf(statusStr)
             } catch (e: IllegalArgumentException) {
                 return@addTool CallToolResult(
-                    content = listOf(TextContent("Invalid status: $statusStr. Valid values: ${JobApplyStatus.values().joinToString(", ")}"))
+                    content = listOf(
+                        TextContent(
+                            "Invalid status: $statusStr. Valid values: ${
+                                JobApplyStatus.values().joinToString(", ")
+                            }"
+                        )
+                    )
                 )
             }
-            
+
             val jobApplies = repository.findByStatus(status)
-            
+
             val result = buildJsonObject {
                 put("success", true)
                 putJsonArray("jobApplies") {
@@ -312,7 +340,7 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                             put("position", jobApply.position)
                             put("jobPostingUrl", jobApply.jobPostingUrl)
                             put("appliedAt", jobApply.appliedAt?.toString())
-                            put("status", jobApply.status.name)
+                            put("status", jobApply.status.description)
                             put("nextEventDate", jobApply.nextEventDate?.toString())
                             put("notes", jobApply.notes)
                             put("createdAt", jobApply.createdAt.toString())
@@ -321,13 +349,13 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                     }
                 }
                 put("count", jobApplies.size)
-                put("statusFilter", status.name)
+                put("statusFilter", status.description)
             }
-            
+
             CallToolResult(content = listOf(TextContent(result.toString())))
         }
     }
-    
+
     private fun registerFindJobAppliesByCompany(server: Server) {
         server.addTool(
             name = "find_job_applies_by_company",
@@ -348,9 +376,9 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                     content = listOf(TextContent("The 'companyName' parameter is required."))
                 )
             }
-            
+
             val jobApplies = repository.findByCompanyName(companyName)
-            
+
             val result = buildJsonObject {
                 put("success", true)
                 putJsonArray("jobApplies") {
@@ -361,7 +389,7 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                             put("position", jobApply.position)
                             put("jobPostingUrl", jobApply.jobPostingUrl)
                             put("appliedAt", jobApply.appliedAt?.toString())
-                            put("status", jobApply.status.name)
+                            put("status", jobApply.status.description)
                             put("nextEventDate", jobApply.nextEventDate?.toString())
                             put("notes", jobApply.notes)
                             put("createdAt", jobApply.createdAt.toString())
@@ -372,11 +400,11 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                 put("count", jobApplies.size)
                 put("companyFilter", companyName)
             }
-            
+
             CallToolResult(content = listOf(TextContent(result.toString())))
         }
     }
-    
+
     private fun registerUpdateJobApplyDetails(server: Server) {
         server.addTool(
             name = "update_job_apply_details",
@@ -417,40 +445,46 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                     content = listOf(TextContent("The 'id' parameter is required."))
                 )
             }
-            
+
             val jobApply = repository.findById(id)
             if (jobApply == null) {
                 return@addTool CallToolResult(
                     content = listOf(TextContent("JobApply not found with id: $id"))
                 )
             }
-            
+
             var updated = false
-            
+
             request.arguments["position"]?.jsonPrimitive?.contentOrNull?.let { position ->
                 if (repository.updatePosition(id, position)) updated = true
             }
-            
+
             request.arguments["jobPostingUrl"]?.jsonPrimitive?.contentOrNull?.let { jobPostingUrl ->
                 if (repository.updateJobPostingUrl(id, jobPostingUrl)) updated = true
             }
-            
+
             request.arguments["appliedAt"]?.jsonPrimitive?.contentOrNull?.let { appliedAtStr ->
-                val appliedAt = LocalDateTime.parse(appliedAtStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                val appliedAt = LocalDateTime.parse(
+                    appliedAtStr,
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                )
                 if (repository.updateAppliedAt(id, appliedAt)) updated = true
             }
-            
+
             request.arguments["nextEventDate"]?.jsonPrimitive?.contentOrNull?.let { nextEventDateStr ->
-                val nextEventDate = LocalDateTime.parse(nextEventDateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                val nextEventDate = LocalDateTime.parse(
+                    nextEventDateStr,
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                )
                 if (repository.updateNextEventDate(id, nextEventDate)) updated = true
             }
-            
+
             request.arguments["notes"]?.jsonPrimitive?.contentOrNull?.let { notes ->
                 if (repository.updateNotes(id, notes)) updated = true
             }
-            
+
             val updatedJobApply = repository.findById(id)!!
-            
+
             val result = buildJsonObject {
                 put("success", updated)
                 putJsonObject("jobApply") {
@@ -459,14 +493,14 @@ class JobApplyTools(private val repository: JobApplyRepository) {
                     put("position", updatedJobApply.position)
                     put("jobPostingUrl", updatedJobApply.jobPostingUrl)
                     put("appliedAt", updatedJobApply.appliedAt?.toString())
-                    put("status", updatedJobApply.status.name)
+                    put("status", updatedJobApply.status.description)
                     put("nextEventDate", updatedJobApply.nextEventDate?.toString())
                     put("notes", updatedJobApply.notes)
                     put("createdAt", updatedJobApply.createdAt.toString())
                     put("updatedAt", updatedJobApply.updatedAt.toString())
                 }
             }
-            
+
             CallToolResult(content = listOf(TextContent(result.toString())))
         }
     }

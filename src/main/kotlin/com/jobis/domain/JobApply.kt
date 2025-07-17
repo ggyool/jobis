@@ -7,14 +7,14 @@ import org.jetbrains.exposed.dao.id.LongIdTable
 import org.jetbrains.exposed.sql.javatime.CurrentDateTime
 import org.jetbrains.exposed.sql.javatime.datetime
 
-enum class JobApplyStatus {
-    APPLIED,
-    EXAM_SCHEDULED,
-    EXAM_RESULT_WAITING,
-    INTERVIEW_SCHEDULED,
-    INTERVIEW_RESULT_WAITING,
-    PASSED,
-    REJECTED
+enum class JobApplyStatus(val description: String) {
+    APPLIED("지원 완료"),
+    EXAM_SCHEDULED("시험 예정"),
+    EXAM_RESULT_WAITING("시험 결과 대기"),
+    INTERVIEW_SCHEDULED("면접 예정"),
+    INTERVIEW_RESULT_WAITING("면접 결과 대기"),
+    PASSED("합격"),
+    REJECTED("불합격")
 }
 
 object JobApply : LongIdTable("job_apply") {
@@ -32,7 +32,7 @@ object JobApply : LongIdTable("job_apply") {
 
 class JobApplyEntity(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<JobApplyEntity>(JobApply)
-    
+
     var companyName by JobApply.companyName
     var position by JobApply.position
     var jobPostingUrl by JobApply.jobPostingUrl
