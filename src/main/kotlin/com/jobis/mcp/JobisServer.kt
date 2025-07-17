@@ -2,6 +2,7 @@ package com.jobis.mcp
 
 import com.jobis.repository.ActivityRepositoryImpl
 import com.jobis.repository.JobApplyRepositoryImpl
+import com.jobis.repository.JobPostingRepositoryImpl
 import io.ktor.utils.io.streams.*
 import io.modelcontextprotocol.kotlin.sdk.Implementation
 import io.modelcontextprotocol.kotlin.sdk.ServerCapabilities
@@ -43,6 +44,10 @@ class JobisServer {
         val jobApplyRepository = JobApplyRepositoryImpl()
         val jobApplyTools = JobApplyTools(jobApplyRepository)
         jobApplyTools.registerTools(server)
+        
+        val jobPostingRepository = JobPostingRepositoryImpl()
+        val jobPostingTools = JobPostingTools(jobPostingRepository)
+        jobPostingTools.registerTools(server)
     }
 
     private fun startServer(server: Server) {
