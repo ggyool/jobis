@@ -1,5 +1,5 @@
 # Jobis
-취업/이직 준비 도우미 MCP 서버 (Job + Jarvis에서 영감을 받음)
+취업/이직 준비 도우미 MCP 서버 (Job + Jarvis에서 영감 받음)
 
 ## 1. 프로젝트 간략 소개
 
@@ -28,7 +28,7 @@
 생성된 jar 파일을 MCP 클라이언트에 연동하여 사용
 
 **Claude Desktop 사용자:**
-- [Claude Desktop MCP 설정 가이드](https://docs.anthropic.com/en/docs/claude-code/mcp)를 참고하여 설정하세요.
+- [Claude Desktop MCP 설정 가이드](https://modelcontextprotocol.io/quickstart/server) 링크의 하단을 참고하여 설정하세요.
 
 **다른 LLM 사용자:**
 - 사용하시는 LLM의 MCP 연동 방법을 웹에서 찾아보시기 바랍니다.
@@ -38,7 +38,6 @@
 - **로컬 저장**: 개인 정보 보안을 위해 모든 데이터는 로컬 SQLite 데이터베이스에 저장
 - **자동 생성**: 실행 시 home 경로에 `jobis.db` 파일이 자동으로 생성되며 필요한 테이블이 초기화됩니다
 - **소프트 삭제**: 데이터 안전성을 위해 실제 삭제 대신 논리적 삭제 방식 사용
-- **한국어 지원**: 한국 사용자를 위한 한국어 인터페이스 제공
 
 ## 4. 향후 계획
 실제 사용하면서 필요한 기능들을 점진적으로 추가해나갈 예정
