@@ -48,6 +48,9 @@ class JobisServer {
         val jobPostingRepository = JobPostingRepositoryImpl()
         val jobPostingTools = JobPostingTools(jobPostingRepository)
         jobPostingTools.registerTools(server)
+        
+        val timeTools = TimeTools()
+        timeTools.registerTools(server)
     }
 
     private fun startServer(server: Server) {
